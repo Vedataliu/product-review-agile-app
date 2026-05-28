@@ -1,6 +1,22 @@
+"use client";
 import Link from 'next/link'
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 export default function Home() {
+
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+
+    getUser();
+  }, []);
+
   return (
     <div className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-[#09090b]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-800/20 via-zinc-950/50 to-zinc-950 pointer-events-none" />
@@ -26,12 +42,31 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-zinc-200 transition-colors"
-            >
-              Sign In
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-4">
+                <span className="text-white text-sm">
+                  {user.email}
+                </span>
+
+                <button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    window.location.reload();
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-zinc-200 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg hover:bg-zinc-200 transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
+
           </div>
         </div>
       </header>

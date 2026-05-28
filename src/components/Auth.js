@@ -1,5 +1,5 @@
 'use client';
-
+import { supabase } from "@/lib/supabase/client";
 import React, { useState } from 'react';
 
 export default function Auth() {
@@ -8,18 +8,41 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    alert(`Login submitted for email: ${email}`);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("Login successful");
+      window.location.href = "/";
+    }
   };
 
-  const handleSignUpSubmit = (e) => {
+  const handleSignUpSubmit = async (e) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    alert(`Sign Up submitted for email: ${email}`);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("Account created");
+      setActiveTab("login");
+    }
   };
 
   return (
@@ -29,11 +52,10 @@ export default function Auth() {
           id="auth-tab-login"
           type="button"
           onClick={() => setActiveTab('login')}
-          className={`flex-1 py-4 text-center text-sm font-semibold transition-all duration-300 ${
-            activeTab === 'login'
-              ? 'text-indigo-600 border-b-2 border-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-          }`}
+          className={`flex-1 py-4 text-center text-sm font-semibold transition-all duration-300 ${activeTab === 'login'
+            ? 'text-indigo-600 border-b-2 border-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
+            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+            }`}
         >
           Sign In
         </button>
@@ -41,11 +63,10 @@ export default function Auth() {
           id="auth-tab-signup"
           type="button"
           onClick={() => setActiveTab('signup')}
-          className={`flex-1 py-4 text-center text-sm font-semibold transition-all duration-300 ${
-            activeTab === 'signup'
-              ? 'text-indigo-600 border-b-2 border-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
-              : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-          }`}
+          className={`flex-1 py-4 text-center text-sm font-semibold transition-all duration-300 ${activeTab === 'signup'
+            ? 'text-indigo-600 border-b-2 border-indigo-600 dark:text-indigo-400 dark:border-indigo-400'
+            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+            }`}
         >
           Sign Up
         </button>
