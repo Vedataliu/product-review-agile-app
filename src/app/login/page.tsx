@@ -9,9 +9,9 @@ export default function Login() {
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex items-center gap-2 mb-4">
             <div className="w-6 h-6 rounded-md bg-white flex items-center justify-center">
-              <span className="text-black font-black text-sm">A</span>
+              <span className="text-black font-black text-sm">R</span>
             </div>
-            <span className="font-bold text-lg tracking-tight text-white">AgileReview</span>
+            <span className="font-bold text-lg tracking-tight text-white">ReviewQuality</span>
           </Link>
           <h2 className="text-2xl font-semibold text-white">Sign in to your account</h2>
         </div>

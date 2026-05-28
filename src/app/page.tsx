@@ -11,9 +11,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-              <span className="text-black font-black text-lg">A</span>
+              <span className="text-black font-black text-lg">R</span>
             </div>
-            <span className="font-bold text-xl tracking-tight text-white">AgileReview</span>
+            <span className="font-bold text-xl tracking-tight text-white">ReviewQuality</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-8">
@@ -47,7 +47,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-white mb-6 leading-tight">
-            Agile Product Review Management, <span className="text-zinc-400">Redefined.</span>
+            Product Quality Review Management, <span className="text-zinc-400">Redefined.</span>
           </h1>
 
           <p className="text-lg md:text-xl text-zinc-400 mb-10 leading-relaxed max-w-2xl">
@@ -115,9 +115,12 @@ export default function Home() {
 
       <footer className="relative z-10 border-t border-zinc-900 py-6">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
-          <div>&copy; {new Date().getFullYear()} AgileReview. All rights reserved.</div>
-          <div className="flex gap-6">
-            <span>Powered by Next.js & Supabase</span>
+          <div>&copy; {new Date().getFullYear()} Review Quality platform of product. All rights reserved.</div>
+          <div className="flex gap-4 items-center">
+            <span className="font-semibold text-zinc-450">Created by:</span>
+            <span>Ermal Aliu</span>
+            <span>Bardh Ahmeti</span>
+            <span>Vedat Aliu</span>
           </div>
         </div>
       </footer>

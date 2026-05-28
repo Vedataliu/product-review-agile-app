@@ -9,9 +9,9 @@ export default function Reviews() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-              <span className="text-black font-black text-lg">A</span>
+              <span className="text-black font-black text-lg">R</span>
             </div>
-            <span className="font-bold text-xl tracking-tight text-white">AgileReview</span>
+            <span className="font-bold text-xl tracking-tight text-white">ReviewQuality</span>
           </Link>
           <nav className="flex items-center gap-8">
             <Link href="/reviews" className="text-sm font-medium text-white">
@@ -95,8 +95,14 @@ export default function Reviews() {
       </main>
 
       <footer className="relative z-10 border-t border-zinc-900 py-6">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between text-xs text-zinc-500">
-          <div>&copy; {new Date().getFullYear()} AgileReview. All rights reserved.</div>
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
+          <div>&copy; {new Date().getFullYear()} Review Quality platform of product. All rights reserved.</div>
+          <div className="flex gap-4 items-center">
+            <span className="font-semibold text-zinc-450">Created by:</span>
+            <span>Ermal Aliu</span>
+            <span>Bardh Ahmeti</span>
+            <span>Vedat Aliu</span>
+          </div>
         </div>
       </footer>
     </div>

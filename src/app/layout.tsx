@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgileReview | Product Review Platform",
-  description: "Secure, modern, and agile product reviews dashboard.",
+  title: "Review Quality Platform of Product",
+  description: "Secure, modern, and comprehensive product quality reviews platform.",
 };
 
 export default function RootLayout({
