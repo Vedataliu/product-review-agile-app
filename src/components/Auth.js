@@ -32,17 +32,34 @@ export default function Auth() {
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
     if (error) {
       alert(error.message);
-    } else {
-      alert("Account created");
-      setActiveTab("login");
+      return;
     }
+
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert([
+          {
+            id: data.user.id,
+            email: email,
+            role: "user",
+          },
+        ]);
+
+      if (profileError) {
+        console.log("Profile error:", profileError.message);
+      }
+    }
+
+    alert("Account created ✅");
+    setActiveTab("login");
   };
 
   return (

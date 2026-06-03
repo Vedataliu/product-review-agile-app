@@ -104,7 +104,7 @@ export default function ProductDetailPage() {
       user_id: user.id,
       rating: newRating,
       comment: newComment.trim(),
-      status: 'pending',
+      status: 'approved',
     });
     if (error) {
       alert('Dërgimi dështoi. Ju lutem provoni përsëri.');

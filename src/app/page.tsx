@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -9,19 +10,32 @@ import Footer from "@/components/Footer";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    const getUser = async () => {
+    const init = async () => {
       const { data } = await supabase.auth.getUser();
-      setUser(data.user);
+      const currentUser = data.user;
+
+      setUser(currentUser);
+
+      if (currentUser) {
+        const { data: roleData } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", currentUser.id)
+          .maybeSingle();
+
+        setRole(roleData?.role);
+      }
     };
 
-    getUser();
+    init();
   }, []);
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-background text-foreground transition-colors duration-300">
-      {/* Background gradients that adapt to dark/light theme */}
+
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-background/40 to-background pointer-events-none" />
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
@@ -30,6 +44,7 @@ export default function Home() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-20 flex-1 flex flex-col justify-center">
         <div className="max-w-3xl">
+
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card/60 text-xs text-muted-foreground mb-8 shadow-sm">
             <span className="flex h-2 w-2 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -39,7 +54,10 @@ export default function Home() {
           </div>
 
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-foreground mb-6 leading-tight">
-            Product Quality Review Management, <span className="text-primary bg-gradient-to-r from-indigo-600 to-indigo-400 bg-clip-text text-transparent dark:from-indigo-400 dark:to-indigo-200">Redefined.</span>
+            Product Quality Review Management,{" "}
+            <span className="text-primary bg-gradient-to-r from-indigo-600 to-indigo-400 bg-clip-text text-transparent dark:from-indigo-400 dark:to-indigo-200">
+              Redefined.
+            </span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl">
@@ -47,23 +65,38 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-20">
-            <Link
-              href="/reviews"
-              className="px-6 py-3 rounded-xl font-semibold text-center text-primary-foreground bg-primary hover:opacity-95 active:scale-98 transition-all shadow-md shadow-primary/10"
-            >
-              Browse Reviews
-            </Link>
-            <Link
-              href="/admin"
-              className="px-6 py-3 rounded-xl font-semibold text-center text-foreground border border-border bg-card/40 hover:bg-muted active:scale-98 transition-all shadow-sm"
-            >
-              Admin Dashboard
-            </Link>
+
+            {role === "user" && (
+              <Link
+                href="/reviews"
+                className="px-6 py-3 rounded-xl font-semibold text-center text-primary-foreground bg-primary hover:opacity-95 active:scale-98 transition-all shadow-md shadow-primary/10"
+              >
+                Browse Reviews
+              </Link>
+            )}
+            {role === "admin" && (
+              <>
+                <Link
+                  href="/admin"
+                  className="px-6 py-3 rounded-xl font-semibold text-center text-primary-foreground bg-primary hover:opacity-95 active:scale-98 transition-all shadow-md shadow-primary/10"
+                >
+                  Admin Dashboard
+                </Link>
+
+                <Link
+                  href="/admin"
+                  className="px-6 py-3 rounded-xl font-semibold text-center text-foreground border border-border bg-card/40 hover:bg-muted active:scale-98 transition-all shadow-sm"
+                >
+                  Moderation Panel
+                </Link>
+              </>
+            )}
+
           </div>
         </div>
 
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Next.js card */}
           <div className="p-6 rounded-2xl border border-border bg-card/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-lg group">
             <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,7 +107,6 @@ export default function Home() {
             <p className="text-sm text-muted-foreground leading-relaxed">App Router boilerplate ready with static rendering and optimized metadata.</p>
           </div>
 
-          {/* Supabase SSR card */}
           <div className="p-6 rounded-2xl border border-border bg-card/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-lg group">
             <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -85,7 +117,6 @@ export default function Home() {
             <p className="text-sm text-muted-foreground leading-relaxed">Complete server-side cookie client logic, browser client, and auth middleware set up.</p>
           </div>
 
-          {/* Tailwind v4 card */}
           <div className="p-6 rounded-2xl border border-border bg-card/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-lg group">
             <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,7 +127,6 @@ export default function Home() {
             <p className="text-sm text-muted-foreground leading-relaxed">Modern layout setup with dark theme config via CSS variables and seamless styling.</p>
           </div>
 
-          {/* Jest Testing card */}
           <div className="p-6 rounded-2xl border border-border bg-card/50 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-primary/50 hover:shadow-lg group">
             <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -9,53 +9,64 @@ const STAR_PATH =
   'M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z';
 
 export default function AdminDashboard() {
-  const [pendingReviews, setPendingReviews] = useState([]);
+  const [approvedReviews, setapprovedReviews] = useState([]);
+  const [rejectedReviews, setRejectedReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    fetchPendingReviews();
+    fetchapprovedReviews();
+    fetchRejectedReviews();
   }, []);
 
-  const fetchPendingReviews = async () => {
+  const fetchapprovedReviews = async () => {
     setLoading(true);
     const { data } = await supabase
       .from('reviews')
       .select('*')
-      .eq('status', 'pending')
+      .eq('status', 'approved')
       .order('created_at', { ascending: true });
-    setPendingReviews(data || []);
+    setapprovedReviews(data || []);
     setLoading(false);
   };
+
+  const fetchRejectedReviews = async () => {
+    const { data } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('status', 'rejected')
+      .order('created_at', { ascending: true });
+
+    setRejectedReviews(data || []);
+  };
+
 
   const triggerNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleApprove = async (id) => {
-    const { error } = await supabase
-      .from('reviews')
-      .update({ status: 'approved' })
-      .eq('id', id);
-    if (!error) {
-      setPendingReviews((prev) => prev.filter((r) => r.id !== id));
-      triggerNotification('Rishikimi u APROVUA me sukses.', 'success');
-    } else {
-      triggerNotification('Aprovimi dështoi. Provoni përsëri.', 'error');
-    }
-  };
-
   const handleReject = async (id) => {
+    const confirmAction = window.confirm(
+      "A je i sigurt që don ta refuzosh këtë rishikim?"
+    );
+
+    if (!confirmAction) return;
+
     const { error } = await supabase
       .from('reviews')
       .update({ status: 'rejected' })
       .eq('id', id);
+
     if (!error) {
-      setPendingReviews((prev) => prev.filter((r) => r.id !== id));
+      setapprovedReviews((prev) => prev.filter((r) => r.id !== id));
+
+      fetchapprovedReviews();
+      fetchRejectedReviews();
+
       triggerNotification('Rishikimi u REFUZUA.', 'error');
     } else {
-      triggerNotification('Refuzimi dështoi. Provoni përsëri.', 'error');
+      triggerNotification('Refuzimi dështoi.', 'error');
     }
   };
 
@@ -85,12 +96,12 @@ export default function AdminDashboard() {
                 Paneli i Moderimit
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Shikoni, aprovoni ose refuzoni rishikimet e produkteve në pritje.
+                Shikoni, refuzoni rishikimet e produkteve.
               </p>
             </div>
             <div className="flex gap-3">
               <button
-                onClick={fetchPendingReviews}
+                onClick={fetchapprovedReviews}
                 disabled={loading}
                 className="inline-flex items-center rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50 transition-colors"
               >
@@ -105,27 +116,39 @@ export default function AdminDashboard() {
           {/* Toast Notification */}
           {notification && (
             <div
-              className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg border backdrop-blur-sm transition-all duration-300 ${
-                notification.type === 'success'
-                  ? 'bg-emerald-50/90 border-emerald-200 text-emerald-800 dark:bg-emerald-950/90 dark:border-emerald-800 dark:text-emerald-300'
-                  : 'bg-rose-50/90 border-rose-200 text-rose-800 dark:bg-rose-950/90 dark:border-rose-800 dark:text-rose-300'
-              }`}
+              className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg border backdrop-blur-sm transition-all duration-300 ${notification.type === 'success'
+                ? 'bg-emerald-50/90 border-emerald-200 text-emerald-800 dark:bg-emerald-950/90 dark:border-emerald-800 dark:text-emerald-300'
+                : 'bg-rose-50/90 border-rose-200 text-rose-800 dark:bg-rose-950/90 dark:border-rose-800 dark:text-rose-300'
+                }`}
             >
               <span className="text-sm font-semibold">{notification.message}</span>
             </div>
           )}
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-4">
             <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-6 shadow-sm">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Në Pritje
+                Të aprovuara
               </span>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-3xl font-extrabold text-foreground">
-                  {loading ? '—' : pendingReviews.length}
+                  {loading ? '—' : approvedReviews.length}
                 </span>
-                <span className="text-xs text-muted-foreground">rishikime pa kontroll</span>
+                <span className="text-xs text-muted-foreground">rishikime</span>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-6 shadow-sm">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Të Refuzuara
+              </span>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold text-foreground">
+                  {loading ? '—' : rejectedReviews.length}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  rishikime
+                </span>
               </div>
             </div>
             <div className="rounded-2xl border border-border bg-card/60 backdrop-blur-sm p-6 shadow-sm">
@@ -152,19 +175,19 @@ export default function AdminDashboard() {
           <div className="overflow-hidden rounded-2xl border border-border bg-card/45 backdrop-blur-sm shadow-sm">
             <div className="p-5 border-b border-border flex justify-between items-center bg-muted/40">
               <h2 className="text-base font-bold text-foreground">
-                Radhа e Rishikimeve
+                Rishikime të aprovuara
               </h2>
               <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
-                {loading ? 'Duke ngarkuar...' : `${pendingReviews.length} në pritje`}
+                {loading ? 'Duke ngarkuar...' : `${approvedReviews.length}`}
               </span>
             </div>
 
             <div className="overflow-x-auto">
               {loading ? (
                 <div className="py-16 text-center text-muted-foreground">
-                  Duke ngarkuar rishikimet në pritje...
+                  Duke ngarkuar rishikimet e aprovuara...
                 </div>
-              ) : pendingReviews.length === 0 ? (
+              ) : approvedReviews.length === 0 ? (
                 <div className="py-16 text-center">
                   <svg
                     className="mx-auto h-12 w-12 text-muted-foreground/50"
@@ -183,7 +206,7 @@ export default function AdminDashboard() {
                     Gjithçka është e azhurnuar!
                   </h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Nuk ka rishikime në pritje për moderim.
+                    Nuk ka rishikime për moderim.
                   </p>
                 </div>
               ) : (
@@ -197,7 +220,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
-                    {pendingReviews.map((rev) => (
+                    {approvedReviews.map((rev) => (
                       <tr
                         key={rev.id}
                         className="text-sm transition-colors hover:bg-muted/10"
@@ -218,11 +241,10 @@ export default function AdminDashboard() {
                             {[...Array(5)].map((_, i) => (
                               <svg
                                 key={i}
-                                className={`h-4 w-4 ${
-                                  i < rev.rating
-                                    ? 'fill-current'
-                                    : 'text-muted-foreground/30'
-                                }`}
+                                className={`h-4 w-4 ${i < rev.rating
+                                  ? 'fill-current'
+                                  : 'text-muted-foreground/30'
+                                  }`}
                                 viewBox="0 0 20 20"
                               >
                                 <path d={STAR_PATH} />
@@ -240,12 +262,7 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-6 py-5 whitespace-nowrap text-right">
                           <div className="inline-flex gap-2">
-                            <button
-                              onClick={() => handleApprove(rev.id)}
-                              className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-950/70"
-                            >
-                              Aprovo
-                            </button>
+
                             <button
                               onClick={() => handleReject(rev.id)}
                               className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-950/70"
@@ -261,6 +278,72 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card/45 backdrop-blur-sm shadow-sm mt-8">
+            <div className="p-5 border-b border-border flex justify-between items-center bg-muted/40">
+              <h2 className="text-base font-bold text-foreground">
+                Rishikime të Refuzuara
+              </h2>
+              <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground">
+                {rejectedReviews.length}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              {rejectedReviews.length === 0 ? (
+                <div className="py-16 text-center text-muted-foreground">
+                  Nuk ka rishikime të refuzuara.
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse">
+                  <tbody className="divide-y divide-border/60">
+                    {rejectedReviews.map((rev) => (
+                      <tr key={rev.id} className="text-sm transition hover:bg-muted/10">
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <div className="font-bold text-foreground">
+                            Produkt #{(rev.product_id || '').slice(0, 8)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            User #{(rev.user_id || '').slice(0, 8)}
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {formatDate(rev.created_at)}
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <div className="flex text-amber-400">
+                            {[...Array(5)].map((_, i) => (
+                              <svg
+                                key={i}
+                                className={`h-4 w-4 ${i < rev.rating ? 'fill-current' : 'text-muted-foreground/30'
+                                  }`}
+                                viewBox="0 0 20 20"
+                              >
+                                <path d={STAR_PATH} />
+                              </svg>
+                            ))}
+                          </div>
+                        </td>
+
+                        <td className="px-6 py-5">
+                          <p className="text-muted-foreground max-w-md line-clamp-2">
+                            {rev.comment}
+                          </p>
+                        </td>
+
+                        <td className="px-6 py-5 text-right">
+                          <span className="text-xs text-rose-400 font-semibold">
+                            Rejected
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+          ``
         </div>
       </main>
 

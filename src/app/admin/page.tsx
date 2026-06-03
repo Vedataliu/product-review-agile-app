@@ -27,19 +27,10 @@ export default function Admin() {
     const { data } = await supabase
       .from("reviews")
       .select("*")
-      .eq("status", "pending");
+      .eq("status", "approved");
 
     setReviews(data || []);
     setLoading(false);
-  };
-
-  const approveReview = async (id: string) => {
-    await supabase
-      .from("reviews")
-      .update({ status: "approved" })
-      .eq("id", id);
-
-    getReviews();
   };
 
   const rejectReview = async (id: string) => {
@@ -61,15 +52,15 @@ export default function Admin() {
         <div className="mb-10">
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Moderimi i Rishikimeve</h1>
           <p className="text-muted-foreground text-sm mt-2 max-w-xl">
-            Aprovoni ose refuzoni rishikimet e produkteve në pritje.
+            Shikoni dhe refuzoni rishikimet e produkteve.
           </p>
         </div>
 
         <div className="rounded-2xl border border-border bg-card/45 backdrop-blur-sm overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-border bg-muted/40 flex items-center justify-between">
-            <span className="text-sm font-bold text-foreground">Radhа e Rishikimeve në Pritje</span>
+            <span className="text-sm font-bold text-foreground">Rishikimet e aprovuara</span>
             <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-muted text-muted-foreground">
-              {loading ? "Duke ngarkuar..." : `${reviews.length} në pritje`}
+              {loading ? "Duke ngarkuar..." : `${reviews.length}`}
             </span>
           </div>
 
@@ -77,11 +68,11 @@ export default function Admin() {
             {loading ? (
               <div className="py-20 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                <span className="text-sm font-medium">Duke ngarkuar radhën...</span>
+                <span className="text-sm font-medium">Duke ngarkuar listën...</span>
               </div>
             ) : reviews.length === 0 ? (
               <div className="py-16 text-center text-muted-foreground">
-                Nuk ka rishikime në pritje për moderim.
+                Nuk ka rishikime për moderim.
               </div>
             ) : (
               reviews.map((r) => (
@@ -95,7 +86,7 @@ export default function Admin() {
                         Produkt #{(r.product_id || "").slice(0, 8)}
                       </span>
                       <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                        Pritje
+                        të aprovuara
                       </span>
                     </div>
 
@@ -114,13 +105,6 @@ export default function Admin() {
                       className="px-4 py-2 text-xs font-semibold rounded-lg bg-muted text-foreground hover:bg-muted/80 active:scale-95 transition-all"
                     >
                       Refuzo
-                    </button>
-
-                    <button
-                      onClick={() => approveReview(r.id)}
-                      className="px-4 py-2 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-95 active:scale-95 transition-all shadow-sm"
-                    >
-                      Aprovo
                     </button>
                   </div>
                 </div>
