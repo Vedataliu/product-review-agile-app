@@ -1,6 +1,31 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #6366f1;
+  --radius: 0.75rem;
+}
+
+.dark {
   --background: #09090b;
   --foreground: #fafafa;
   --card: #09090b;
@@ -9,7 +34,7 @@
   --popover-foreground: #fafafa;
   --primary: #fafafa;
   --primary-foreground: #18181b;
-  --secondary: #27272a;
+  --secondary: #18181b;
   --secondary-foreground: #fafafa;
   --muted: #27272a;
   --muted-foreground: #a1a1aa;
@@ -20,7 +45,6 @@
   --border: #27272a;
   --input: #27272a;
   --ring: #d4d4d8;
-  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -52,4 +76,5 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
