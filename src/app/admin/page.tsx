@@ -1,13 +1,16 @@
 "use client";
-import Link from 'next/link'
+
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export default function Admin() {
-
   const [user, setUser] = useState<User | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getUser = async () => {
@@ -20,12 +23,14 @@ export default function Admin() {
   }, []);
 
   const getReviews = async () => {
+    setLoading(true);
     const { data } = await supabase
       .from("reviews")
       .select("*")
       .eq("status", "pending");
 
     setReviews(data || []);
+    setLoading(false);
   };
 
   const approveReview = async (id: string) => {
@@ -45,108 +50,87 @@ export default function Admin() {
 
     getReviews();
   };
-  return (
-    <div className="relative min-h-screen flex flex-col justify-between bg-[#09090b]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-800/10 via-zinc-950/50 to-zinc-950 pointer-events-none" />
 
-      <header className="relative z-10 border-b border-zinc-800/80 bg-zinc-950/50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-              <span className="text-black font-black text-lg">R</span>
-            </div>
-            <span className="font-bold text-xl tracking-tight text-white">ReviewQuality</span>
-          </Link>
-          <nav className="flex items-center gap-8">
-            <Link href="/reviews" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-              Reviews
-            </Link>
-            <Link href="/admin" className="text-sm font-medium text-white">
-              Admin Moderation
-            </Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            {user ? (
-              <>
-                <span className="text-white text-sm">{user.email}</span>
-                <button onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} className="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg">Sign Out</button>
-              </>
-            ) : (
-              <Link href="/login" className="px-4 py-2 text-sm font-medium text-black bg-white rounded-lg">Sign In</Link>
-            )}
-          </div>
-        </div>
-      </header>
+  return (
+    <div className="relative min-h-screen flex flex-col justify-between bg-background text-foreground transition-colors duration-300">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/5 via-background/40 to-background pointer-events-none" />
+
+      <Navbar />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-12 flex-1 w-full">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Content Moderation</h1>
-          <p className="text-zinc-400 text-sm mt-1">Approve, reject, or edit pending product reviews.</p>
+        <div className="mb-10">
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Moderimi i Rishikimeve</h1>
+          <p className="text-muted-foreground text-sm mt-2 max-w-xl">
+            Aprovoni ose refuzoni rishikimet e produkteve në pritje.
+          </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/10 backdrop-blur-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/30 flex items-center justify-between">
-            <span className="text-sm font-semibold text-white">Pending Moderation Queue</span>
-            <span className="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-400">{reviews.length} reviews pending</span>
+        <div className="rounded-2xl border border-border bg-card/45 backdrop-blur-sm overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-border bg-muted/40 flex items-center justify-between">
+            <span className="text-sm font-bold text-foreground">Radhа e Rishikimeve në Pritje</span>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-muted text-muted-foreground">
+              {loading ? "Duke ngarkuar..." : `${reviews.length} në pritje`}
+            </span>
           </div>
 
-          <div className="divide-y divide-zinc-800/60">
-            {reviews.map((r) => (
-              <div
-                key={r.id}
-                className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-white">
-                      Product Review
-                    </span>
-                    <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">
-                      Pending
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-zinc-400 max-w-2xl leading-relaxed">
-                    {r.comment}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs text-zinc-500">
-                    <span>By {r.user_id}</span>
-                    <span>⭐ {r.rating}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <button
-                    onClick={() => rejectReview(r.id)}
-                    className="px-4 py-2 text-xs font-semibold rounded bg-zinc-800 text-white hover:bg-zinc-700"
-                  >
-                    Reject
-                  </button>
-
-                  <button
-                    onClick={() => approveReview(r.id)}
-                    className="px-4 py-2 text-xs font-semibold rounded bg-white text-black hover:bg-zinc-200"
-                  >
-                    Approve
-                  </button>
-                </div>
+          <div className="divide-y divide-border/60">
+            {loading ? (
+              <div className="py-20 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="text-sm font-medium">Duke ngarkuar radhën...</span>
               </div>
-            ))}
+            ) : reviews.length === 0 ? (
+              <div className="py-16 text-center text-muted-foreground">
+                Nuk ka rishikime në pritje për moderim.
+              </div>
+            ) : (
+              reviews.map((r) => (
+                <div
+                  key={r.id}
+                  className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-muted/10 transition-colors"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-foreground">
+                        Produkt #{(r.product_id || "").slice(0, 8)}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        Pritje
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
+                      {r.comment}
+                    </p>
+
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground/80 font-medium">
+                      <span>Dërguesi: User #{(r.user_id || "").slice(0, 8)}</span>
+                      <span className="flex items-center text-amber-500">★ {r.rating}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      onClick={() => rejectReview(r.id)}
+                      className="px-4 py-2 text-xs font-semibold rounded-lg bg-muted text-foreground hover:bg-muted/80 active:scale-95 transition-all"
+                    >
+                      Refuzo
+                    </button>
+
+                    <button
+                      onClick={() => approveReview(r.id)}
+                      className="px-4 py-2 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:opacity-95 active:scale-95 transition-all shadow-sm"
+                    >
+                      Aprovo
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </main>
 
-      <footer className="relative z-10 border-t border-zinc-900 py-6">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
-          <div>&copy; {new Date().getFullYear()} Review Quality platform of product. All rights reserved.</div>
-          <div className="flex gap-4 items-center">
-            <span className="font-semibold text-zinc-450">Created by:</span>
-            <span>Ermal Aliu</span>
-            <span>Bardh Ahmeti</span>
-            <span>Vedat Aliu</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
-  )
+  );
 }

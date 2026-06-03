@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const STAR_PATH =
   'M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z';
@@ -166,193 +168,200 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 dark:bg-slate-950">
-      <div className="mx-auto max-w-5xl space-y-12">
+    <div className="relative min-h-screen flex flex-col justify-between bg-background text-foreground transition-colors duration-300">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/5 via-background/40 to-background pointer-events-none" />
+      <Navbar />
 
-        {/* Reviews + Form */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1 w-full">
+        <div className="space-y-12">
 
-          {/* Reviews List */}
-          <div className="lg:col-span-7 space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Rishikimet e Klientëve
-            </h2>
+          {/* Reviews + Form */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-            {loading ? (
-              <div className="py-10 text-center text-slate-400 dark:text-slate-500">
-                Duke ngarkuar rishikimet...
-              </div>
-            ) : reviews.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-slate-800 dark:text-slate-400">
-                Ende nuk ka rishikime të aprovuara. Jini i pari!
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {reviews.map((rev) => (
-                  <article
-                    key={rev.id}
-                    className="rounded-xl border border-slate-200/60 bg-white p-6 shadow-sm dark:border-slate-800/60 dark:bg-slate-900"
-                  >
-                    {editingId === rev.id ? (
-                      /* Inline edit form */
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                          Modifiko Rishikimin
-                        </h4>
-                        <div>
-                          <span className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            Vlerësimi
-                          </span>
-                          <div className="mt-2">
-                            <StarPicker
-                              value={editRating}
-                              hover={editHoverRating}
-                              onChange={setEditRating}
-                              onHover={setEditHoverRating}
-                              onLeave={() => setEditHoverRating(null)}
+            {/* Reviews List */}
+            <div className="lg:col-span-7 space-y-6">
+              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
+                Rishikimet e Klientëve
+              </h2>
+
+              {loading ? (
+                <div className="py-10 text-center text-muted-foreground">
+                  Duke ngarkuar rishikimet...
+                </div>
+              ) : reviews.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground bg-card/20">
+                  Ende nuk ka rishikime të aprovuara. Jini i pari!
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((rev) => (
+                    <article
+                      key={rev.id}
+                      className="rounded-2xl border border-border bg-card/45 backdrop-blur-sm p-6 shadow-sm"
+                    >
+                      {editingId === rev.id ? (
+                        /* Inline edit form */
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-bold text-foreground">
+                            Modifiko Rishikimin
+                          </h4>
+                          <div>
+                            <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              Vlerësimi
+                            </span>
+                            <div className="mt-2">
+                              <StarPicker
+                                value={editRating}
+                                hover={editHoverRating}
+                                onChange={setEditRating}
+                                onHover={setEditHoverRating}
+                                onLeave={() => setEditHoverRating(null)}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              Rishikimi
+                            </label>
+                            <textarea
+                              rows={3}
+                              value={editComment}
+                              onChange={(e) => setEditComment(e.target.value)}
+                              className="mt-1 w-full rounded-lg border border-border bg-muted/60 text-foreground placeholder:text-muted-foreground/50 px-3 py-2 text-sm outline-none transition focus:border-primary"
                             />
                           </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            Rishikimi
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={editComment}
-                            onChange={(e) => setEditComment(e.target.value)}
-                            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 text-white placeholder:text-zinc-500 px-3 py-2 text-sm outline-none transition focus:border-indigo-500"
-                          />
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditSave(rev.id)}
-                            disabled={editSubmitting}
-                            className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-                          >
-                            {editSubmitting ? 'Duke ruajtur...' : 'Ruaj Ndryshimet'}
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
-                          >
-                            Anulo
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Review display */
-                      <>
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
-                            {getDisplayName(rev)}
-                          </span>
-                          <span className="text-xs text-slate-400 dark:text-slate-500">
-                            {formatDate(rev.created_at)}
-                          </span>
-                        </div>
-                        <div className="mt-2">
-                          <RatingStars rating={rev.rating} />
-                        </div>
-                        <p className="mt-3 text-sm text-slate-600 leading-relaxed dark:text-slate-400">
-                          {rev.comment}
-                        </p>
-                        {user && rev.user_id === user.id && (
-                          <div className="mt-4 flex gap-2">
+                          <div className="flex gap-2">
                             <button
-                              onClick={() => handleEditStart(rev)}
-                              className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                              onClick={() => handleEditSave(rev.id)}
+                              disabled={editSubmitting}
+                              className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all"
                             >
-                              Modifiko
+                              {editSubmitting ? 'Duke ruajtur...' : 'Ruaj Ndryshimet'}
                             </button>
                             <button
-                              onClick={() => handleDelete(rev.id)}
-                              className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-950/70"
+                              onClick={() => setEditingId(null)}
+                              className="rounded-lg border border-border px-4 py-2 text-xs font-semibold text-foreground bg-card hover:bg-muted transition-all"
                             >
-                              Fshi
+                              Anulo
                             </button>
                           </div>
-                        )}
-                      </>
-                    )}
-                  </article>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Submit review form */}
-          <div className="lg:col-span-5">
-            <div className="sticky top-6 rounded-2xl border border-zinc-700 bg-zinc-900 p-6 shadow-md">
-              <h3 className="text-lg font-bold text-white">
-                Ndaj Përvojën Tënde
-              </h3>
-
-              {user ? (
-                <>
-                  <p className="mt-1 text-xs text-zinc-400">
-                    Duke dërguar si {user.email}
-                  </p>
-                  <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                    <div>
-                      <span className="block text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                        Vlerësimi
-                      </span>
-                      <div className="mt-2">
-                        <StarPicker
-                          value={newRating}
-                          hover={hoverRating}
-                          onChange={setNewRating}
-                          onHover={setHoverRating}
-                          onLeave={() => setHoverRating(null)}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="review-comment"
-                        className="block text-xs font-semibold uppercase tracking-wider text-zinc-400"
-                      >
-                        Rishikimi Juaj
-                      </label>
-                      <textarea
-                        id="review-comment"
-                        rows={5}
-                        required
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Përshkruani përvojën tuaj me këtë produkt..."
-                        className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-800 text-white placeholder:text-zinc-500 px-3 py-2 text-sm outline-none transition focus:border-indigo-500"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:opacity-50"
-                    >
-                      {submitting ? 'Duke dërguar...' : 'Dërgo Rishikimin'}
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <p className="mt-1 text-xs text-zinc-400">
-                    Identifikohuni për të lënë një rishikim për këtë produkt.
-                  </p>
-                  <div className="mt-5">
-                    <Link
-                      href="/login"
-                      className="block w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-md transition hover:bg-indigo-700"
-                    >
-                      Identifikohu për të Rishikuar
-                    </Link>
-                  </div>
-                </>
+                        </div>
+                      ) : (
+                        /* Review display */
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-foreground">
+                              {getDisplayName(rev)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(rev.created_at)}
+                            </span>
+                          </div>
+                          <div className="mt-2">
+                            <RatingStars rating={rev.rating} />
+                          </div>
+                          <p className="mt-3 text-sm text-foreground/80 leading-relaxed">
+                            {rev.comment}
+                          </p>
+                          {user && rev.user_id === user.id && (
+                            <div className="mt-4 flex gap-2">
+                              <button
+                                onClick={() => handleEditStart(rev)}
+                                className="rounded-lg bg-muted px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/80 transition-colors"
+                              >
+                                Modifiko
+                              </button>
+                              <button
+                                onClick={() => handleDelete(rev.id)}
+                                className="rounded-lg bg-destructive/15 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-colors"
+                              >
+                                Fshi
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </article>
+                  ))}
+                </div>
               )}
             </div>
-          </div>
-        </section>
-      </div>
-    </main>
+
+            {/* Submit review form */}
+            <div className="lg:col-span-5">
+              <div className="sticky top-24 rounded-2xl border border-border bg-card/65 backdrop-blur-sm p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-foreground">
+                  Ndaj Përvojën Tënde
+                </h3>
+
+                {user ? (
+                  <>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Duke dërguar si <span className="font-semibold text-foreground">{user.email}</span>
+                    </p>
+                    <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+                      <div>
+                        <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Vlerësimi
+                        </span>
+                        <div className="mt-2">
+                          <StarPicker
+                            value={newRating}
+                            hover={hoverRating}
+                            onChange={setNewRating}
+                            onHover={setHoverRating}
+                            onLeave={() => setHoverRating(null)}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="review-comment"
+                          className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                        >
+                          Rishikimi Juaj
+                        </label>
+                        <textarea
+                          id="review-comment"
+                          rows={5}
+                          required
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          placeholder="Përshkruani përvojën tuaj me këtë produkt..."
+                          className="mt-1 w-full rounded-lg border border-border bg-muted/60 text-foreground placeholder:text-muted-foreground/50 px-3 py-2 text-sm outline-none transition focus:border-primary"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 disabled:opacity-50"
+                      >
+                        {submitting ? 'Duke dërguar...' : 'Dërgo Rishikimin'}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Identifikohuni për të lënë një rishikim për këtë produkt.
+                    </p>
+                    <div className="mt-5">
+                      <Link
+                        href="/login"
+                        className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+                      >
+                        Identifikohu për të Rishikuar
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
   );
 }
