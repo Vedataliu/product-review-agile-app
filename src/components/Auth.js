@@ -1,8 +1,10 @@
 'use client';
 import { supabase } from "@/lib/supabase/client";
 import React, { useState } from 'react';
+import { useToast } from "@/components/Toast";
 
 export default function Auth() {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,10 +19,12 @@ export default function Auth() {
     });
 
     if (error) {
-      alert(error.message);
+      showToast(error.message, 'error');
     } else {
-      alert("Login successful");
-      window.location.href = "/";
+      showToast("Identifikimi u krye me sukses!", 'success');
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1500);
     }
   };
 
@@ -28,7 +32,7 @@ export default function Auth() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      showToast("Fjalëkalimet nuk përputhen!", 'error');
       return;
     }
 
@@ -38,7 +42,7 @@ export default function Auth() {
     });
 
     if (error) {
-      alert(error.message);
+      showToast(error.message, 'error');
       return;
     }
 
@@ -54,13 +58,14 @@ export default function Auth() {
         ]);
 
       if (profileError) {
-        console.log("Profile error:", profileError.message);
+        showToast("Gabim në krijimin e profilit: " + profileError.message, 'error');
       }
     }
 
-    alert("Account created ✅");
+    showToast("Llogaria u krijua me sukses! ✅", 'success');
     setActiveTab("login");
   };
+
 
   return (
     <div className="w-full max-w-md mx-auto overflow-hidden rounded-2xl border border-slate-200/80 bg-white/70 backdrop-blur-md shadow-xl dark:border-slate-800/80 dark:bg-slate-900/70">

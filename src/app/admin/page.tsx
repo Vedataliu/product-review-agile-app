@@ -6,8 +6,10 @@ import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useToast } from "@/components/Toast";
 
 export default function Admin() {
+  const { showToast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,13 +36,24 @@ export default function Admin() {
   };
 
   const rejectReview = async (id: string) => {
-    await supabase
+    const confirmAction = window.confirm(
+      "A je i sigurt që don ta refuzosh këtë rishikim?"
+    );
+    if (!confirmAction) return;
+
+    const { error } = await supabase
       .from("reviews")
       .update({ status: "rejected" })
       .eq("id", id);
 
-    getReviews();
+    if (!error) {
+      showToast("Rishikimi u refuzua me sukses!", "success");
+      getReviews();
+    } else {
+      showToast("Refuzimi i rishikimit dështoi.", "error");
+    }
   };
+
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between bg-background text-foreground transition-colors duration-300">

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useToast } from '@/components/Toast';
+
 
 const STAR_PATH =
   'M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z';
@@ -51,6 +53,7 @@ function StarPicker({ value, hover, onChange, onHover, onLeave }) {
 export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [user, setUser] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -60,24 +63,58 @@ export default function ProductDetailPage() {
   const [hoverRating, setHoverRating] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [commentError, setCommentError] = useState('');
 
   const [editingId, setEditingId] = useState(null);
   const [editRating, setEditRating] = useState(5);
   const [editHoverRating, setEditHoverRating] = useState(null);
   const [editComment, setEditComment] = useState('');
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editCommentError, setEditCommentError] = useState('');
+
+  const [sortBy, setSortBy] = useState('newest');
+
+  const sortedReviews = React.useMemo(() => {
+    return [...reviews].sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      if (sortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+      if (sortBy === 'rating-desc') {
+        return b.rating - a.rating;
+      }
+      if (sortBy === 'rating-asc') {
+        return a.rating - b.rating;
+      }
+      return 0;
+    });
+  }, [reviews, sortBy]);
+
+
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data: userData } = await supabase.auth.getUser();
+    const currentUser = userData?.user;
+
+    let query = supabase
       .from('reviews')
       .select('*')
-      .eq('product_id', id)
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false });
+      .eq('product_id', id);
+
+    if (currentUser) {
+      query = query.or(`status.eq.approved,user_id.eq.${currentUser.id}`);
+    } else {
+      query = query.eq('status', 'approved');
+    }
+
+    const { data } = await query.order('created_at', { ascending: false });
     setReviews(data || []);
     setLoading(false);
   }, [id]);
+
 
   useEffect(() => {
     const getUser = async () => {
@@ -90,12 +127,14 @@ export default function ProductDetailPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setCommentError('');
     if (!user) {
-      alert('Duhet të identifikoheni për të lënë një rishikim.');
+      showToast('Duhet të identifikoheni për të lënë një rishikim.', 'warning');
       return;
     }
     if (!newComment.trim()) {
-      alert('Ju lutem shkruani rishikimin tuaj.');
+      setCommentError('Ju lutem shkruani rishikimin tuaj.');
+      showToast('Ju lutem shkruani rishikimin tuaj.', 'error');
       return;
     }
     setSubmitting(true);
@@ -107,9 +146,12 @@ export default function ProductDetailPage() {
       status: 'approved',
     });
     if (error) {
-      alert('Dërgimi dështoi. Ju lutem provoni përsëri.');
+      showToast('Dërgimi dështoi. Ju lutem provoni përsëri.', 'error');
       setSubmitting(false);
     } else {
+      showToast('Rishikimi juaj u dërgua me sukses!', 'success');
+      setNewComment('');
+      setNewRating(5);
       router.push('/reviews');
     }
   };
@@ -119,10 +161,16 @@ export default function ProductDetailPage() {
     setEditRating(rev.rating);
     setEditComment(rev.comment);
     setEditHoverRating(null);
+    setEditCommentError('');
   };
 
   const handleEditSave = async (revId) => {
-    if (!editComment.trim()) return;
+    setEditCommentError('');
+    if (!editComment.trim()) {
+      setEditCommentError('Ju lutem shkruani rishikimin tuaj.');
+      showToast('Ju lutem shkruani rishikimin tuaj.', 'error');
+      return;
+    }
     setEditSubmitting(true);
     const { error } = await supabase
       .from('reviews')
@@ -130,8 +178,9 @@ export default function ProductDetailPage() {
       .eq('id', revId)
       .eq('user_id', user.id);
     if (error) {
-      alert('Modifikimi dështoi.');
+      showToast('Modifikimi dështoi.', 'error');
     } else {
+      showToast('Rishikimi u modifikua me sukses dhe po pret aprovim!', 'success');
       setEditingId(null);
       fetchReviews();
     }
@@ -146,11 +195,13 @@ export default function ProductDetailPage() {
       .eq('id', revId)
       .eq('user_id', user.id);
     if (!error) {
+      showToast('Rishikimi u fshi me sukses!', 'success');
       fetchReviews();
     } else {
-      alert('Fshirja dështoi.');
+      showToast('Fshirja dështoi.', 'error');
     }
   };
+
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -180,9 +231,29 @@ export default function ProductDetailPage() {
 
             {/* Reviews List */}
             <div className="lg:col-span-7 space-y-6">
-              <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
-                Rishikimet e Klientëve
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+                <h2 className="text-2xl font-extrabold tracking-tight text-foreground">
+                  Rishikimet e Klientëve
+                </h2>
+                {reviews.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="sort-reviews" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                      Rendit sipas:
+                    </label>
+                    <select
+                      id="sort-reviews"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="rounded-lg border border-border bg-card/65 px-3 py-1.5 text-xs font-bold text-foreground outline-none transition focus:border-primary cursor-pointer hover:bg-muted"
+                    >
+                      <option value="newest">Më të rejat (Datës)</option>
+                      <option value="oldest">Më të vjetrat (Datës)</option>
+                      <option value="rating-desc">Vlerësimit më të lartë (★)</option>
+                      <option value="rating-asc">Vlerësimit më të ulët (★)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
 
               {loading ? (
                 <div className="py-10 text-center text-muted-foreground">
@@ -194,10 +265,17 @@ export default function ProductDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {reviews.map((rev) => (
+                  {sortedReviews.map((rev) => (
+
                     <article
                       key={rev.id}
-                      className="rounded-2xl border border-border bg-card/45 backdrop-blur-sm p-6 shadow-sm"
+                      className={`rounded-2xl border backdrop-blur-sm p-6 shadow-sm transition-all duration-300 ${
+                        rev.status === 'rejected'
+                          ? 'border-destructive/30 bg-destructive/5'
+                          : rev.status === 'pending'
+                          ? 'border-amber-500/20 bg-amber-500/5'
+                          : 'border-border bg-card/45'
+                      }`}
                     >
                       {editingId === rev.id ? (
                         /* Inline edit form */
@@ -226,9 +304,24 @@ export default function ProductDetailPage() {
                             <textarea
                               rows={3}
                               value={editComment}
-                              onChange={(e) => setEditComment(e.target.value)}
-                              className="mt-1 w-full rounded-lg border border-border bg-muted/60 text-foreground placeholder:text-muted-foreground/50 px-3 py-2 text-sm outline-none transition focus:border-primary"
+                              onChange={(e) => {
+                                setEditComment(e.target.value);
+                                if (e.target.value.trim()) setEditCommentError('');
+                              }}
+                              className={`mt-1 w-full rounded-lg border bg-muted/60 text-foreground placeholder:text-muted-foreground/50 px-3 py-2 text-sm outline-none transition ${
+                                editCommentError 
+                                  ? 'border-destructive/60 focus:border-destructive ring-1 ring-destructive/20' 
+                                  : 'border-border focus:border-primary'
+                              }`}
                             />
+                            {editCommentError && (
+                              <p className="mt-1.5 text-xs text-destructive flex items-center gap-1.5 animate-toast">
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                {editCommentError}
+                              </p>
+                            )}
                           </div>
                           <div className="flex gap-2">
                             <button
@@ -249,6 +342,22 @@ export default function ProductDetailPage() {
                       ) : (
                         /* Review display */
                         <>
+                          {rev.status === 'rejected' && (
+                            <div className="mb-4 flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-semibold border border-destructive/20 animate-toast">
+                              <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                              <span>Ky opinion është refuzuar nga administratori për shkak të përmbajtjes ose gjuhës jo të përshtatshme.</span>
+                            </div>
+                          )}
+                          {rev.status === 'pending' && (
+                            <div className="mb-4 flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-semibold border border-amber-500/20 animate-toast">
+                              <svg className="w-4 h-4 flex-shrink-0 mt-0.5 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+                              </svg>
+                              <span>Ky opinion është në proces verifikimi nga administratori.</span>
+                            </div>
+                          )}
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-foreground">
                               {getDisplayName(rev)}
@@ -324,12 +433,26 @@ export default function ProductDetailPage() {
                         <textarea
                           id="review-comment"
                           rows={5}
-                          required
                           value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
+                          onChange={(e) => {
+                            setNewComment(e.target.value);
+                            if (e.target.value.trim()) setCommentError('');
+                          }}
                           placeholder="Përshkruani përvojën tuaj me këtë produkt..."
-                          className="mt-1 w-full rounded-lg border border-border bg-muted/60 text-foreground placeholder:text-muted-foreground/50 px-3 py-2 text-sm outline-none transition focus:border-primary"
+                          className={`mt-1 w-full rounded-lg border bg-muted/60 text-foreground placeholder:text-muted-foreground/50 px-3 py-2 text-sm outline-none transition ${
+                            commentError 
+                              ? 'border-destructive/60 focus:border-destructive ring-1 ring-destructive/20' 
+                              : 'border-border focus:border-primary'
+                          }`}
                         />
+                        {commentError && (
+                          <p className="mt-1.5 text-xs text-destructive flex items-center gap-1.5 animate-toast">
+                            <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            {commentError}
+                          </p>
+                        )}
                       </div>
                       <button
                         type="submit"

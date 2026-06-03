@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useTheme } from "@/components/ThemeProvider";
+import { useToast } from "@/components/Toast";
 
 export default function Navbar() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const { theme, toggleTheme } = useTheme();
@@ -29,10 +31,35 @@ export default function Navbar() {
           .maybeSingle();
 
         setRole(roleData?.role);
+
+        const { data: rejectedReviews } = await supabase
+          .from("reviews")
+          .select("id, comment")
+          .eq("user_id", currentUser.id)
+          .eq("status", "rejected");
+
+        if (rejectedReviews && rejectedReviews.length > 0) {
+          const notifiedKey = `notified_rejected_${currentUser.id}`;
+          const alreadyNotified = JSON.parse(sessionStorage.getItem(notifiedKey) || "[]");
+          let updated = false;
+
+          rejectedReviews.forEach((review) => {
+            if (!alreadyNotified.includes(review.id)) {
+              showToast(`Opinioni juaj është refuzuar nga administratori për shkak të gjuhës jo të përshtatshme.`, "error");
+              alreadyNotified.push(review.id);
+              updated = true;
+            }
+          });
+
+          if (updated) {
+            sessionStorage.setItem(notifiedKey, JSON.stringify(alreadyNotified));
+          }
+        }
       }
     };
 
     init();
+
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
