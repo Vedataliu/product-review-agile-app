@@ -249,16 +249,26 @@ export default function ProductDetailPage() {
               Të gjitha produktet
             </Link>
             {product && (
-              <>
-                <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground">
-                  {product.name}
-                </h1>
-                {product.description && (
-                  <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                    {product.description}
-                  </p>
+              <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-5">
+                <div className="flex-1">
+                  <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+                    {product.name}
+                  </h1>
+                  {product.description && (
+                    <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                      {product.description}
+                    </p>
+                  )}
+                </div>
+                {product.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full sm:w-40 h-40 rounded-2xl object-cover border border-border/40 bg-muted/60 shrink-0"
+                  />
                 )}
-              </>
+              </div>
             )}
           </div>
 

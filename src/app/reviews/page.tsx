@@ -83,10 +83,19 @@ export default function Reviews() {
                   className="group p-6 rounded-2xl border border-border bg-card/40 backdrop-blur-sm flex flex-col justify-between hover:border-primary/45 hover:bg-card hover:shadow-lg transition-all duration-300 hover:scale-[1.01]"
                 >
                   <div>
-                    <div className="w-full h-40 rounded-xl bg-muted/60 border border-border/40 flex items-center justify-center mb-5 transition-colors group-hover:bg-primary/5">
-                      <svg className="w-12 h-12 text-muted-foreground/60 transition-transform duration-300 group-hover:scale-105 group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
+                    <div className="w-full h-40 rounded-xl bg-muted/60 border border-border/40 flex items-center justify-center mb-5 overflow-hidden transition-colors group-hover:bg-primary/5">
+                      {product.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-contain p-3 transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <svg className="w-12 h-12 text-muted-foreground/60 transition-transform duration-300 group-hover:scale-105 group-hover:text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                      )}
                     </div>
                     <h2 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                       {product.name}
