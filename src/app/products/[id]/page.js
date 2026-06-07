@@ -56,6 +56,7 @@ export default function ProductDetailPage() {
   const { showToast } = useToast();
 
   const [user, setUser] = useState(null);
+  const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -94,6 +95,15 @@ export default function ProductDetailPage() {
 
 
 
+  const fetchProduct = useCallback(async () => {
+    const { data } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single();
+    setProduct(data || null);
+  }, [id]);
+
   const fetchReviews = useCallback(async () => {
     setLoading(true);
     const { data: userData } = await supabase.auth.getUser();
@@ -122,8 +132,9 @@ export default function ProductDetailPage() {
       setUser(data.user);
     };
     getUser();
+    fetchProduct();
     fetchReviews();
-  }, [fetchReviews]);
+  }, [fetchProduct, fetchReviews]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -225,6 +236,31 @@ export default function ProductDetailPage() {
 
       <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1 w-full">
         <div className="space-y-12">
+
+          {/* Product header */}
+          <div className="pb-2">
+            <Link
+              href="/reviews"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Të gjitha produktet
+            </Link>
+            {product && (
+              <>
+                <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground">
+                  {product.name}
+                </h1>
+                {product.description && (
+                  <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                    {product.description}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
 
           {/* Reviews + Form */}
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -407,6 +443,11 @@ export default function ProductDetailPage() {
                   <>
                     <p className="mt-1.5 text-xs text-muted-foreground">
                       Duke dërguar si <span className="font-semibold text-foreground">{user.email}</span>
+                      {product && (
+                        <>
+                          {' '}për <span className="font-semibold text-foreground">{product.name}</span>
+                        </>
+                      )}
                     </p>
                     <form onSubmit={handleSubmit} className="mt-5 space-y-4">
                       <div>
@@ -466,7 +507,8 @@ export default function ProductDetailPage() {
                 ) : (
                   <>
                     <p className="mt-1.5 text-xs text-muted-foreground">
-                      Identifikohuni për të lënë një rishikim për këtë produkt.
+                      Identifikohuni për të lënë një rishikim
+                      {product && <> për <span className="font-semibold text-foreground">{product.name}</span></>}.
                     </p>
                     <div className="mt-5">
                       <Link
